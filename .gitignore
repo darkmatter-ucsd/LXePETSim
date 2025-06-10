@@ -4,7 +4,6 @@
 # temporary data
 /tmp
 *.log
-*.txt
 *.pkl
 cache/
 
