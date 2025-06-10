@@ -1,0 +1,26 @@
+# virtual env
+.venv
+
+# temporary data
+/tmp
+*.log
+*.txt
+*.pkl
+cache/
+
+/plots
+/results
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Plots
+*.svg
+*.jpg
+*.png
+*.bklt
+
+# Jupyter Notebook
+.ipynb_checkpoints
