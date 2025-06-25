@@ -8,6 +8,14 @@ from pet_helpers import add_vereos_digitizer_v1
 from opengate.geometry.utility import get_circular_repetition
 from opengate.sources.base import get_rad_yield
 
+# Import our phantom functions
+from phantoms import (
+    add_multiple_hot_spheres_phantom,
+    add_simple_hot_sphere_phantom,
+    add_resolution_test_phantom,
+    add_cold_spheres_phantom
+)
+
 if __name__ == "__main__":
     sim = gate.Simulation()
 
@@ -49,56 +57,94 @@ if __name__ == "__main__":
         module.translation = translations_ring
         module.rotation = rotations_ring
 
-    # add table
+    # add table (uncomment if needed)
     # bed = pet_vereos.add_table(sim, "pet")
 
-    # add a simple waterbox with a hot sphere inside
-    waterbox = sim.add_volume("Box", "waterbox")
-    waterbox.size = [10 * cm, 10 * cm, 10 * cm]
-    waterbox.translation = [0 * cm, 0 * cm, 0 * cm]
-    waterbox.material = "G4_WATER"
-    waterbox.color = [0, 0, 1, 1]
+    # ============ PHANTOM SELECTION ============
+    # Choose which phantom to use by uncommenting one of the following
+    
+    # Option 1: Multiple hot spheres (recommended for comprehensive testing)
+    phantom, sources = add_multiple_hot_spheres_phantom(sim, "multi_sphere")
+    phantom_name = "multiple_hot_spheres"
+    
+    # Option 2: Simple single hot sphere (original)
+    # phantom, sources = add_simple_hot_sphere_phantom(sim, "simple")
+    # phantom_name = "simple_hot_sphere"
+    
+    # Option 3: Resolution test with small sphere pairs
+    # phantom, sources = add_resolution_test_phantom(sim, "resolution")
+    # phantom_name = "resolution_test"
+    
+    # Option 4: Hot and cold spheres with background
+    # phantom, sources = add_cold_spheres_phantom(sim, "hot_cold")
+    # phantom_name = "hot_cold_spheres"
+    
+    print(f"\nUsing phantom: {phantom_name}")
+    print(f"Total sources created: {len(sources)}")
 
-    hot_sphere = sim.add_volume("Sphere", "hot_sphere")
-    hot_sphere.mother = waterbox.name
-    hot_sphere.rmax = 1 * cm
-    hot_sphere.material = "G4_WATER"
-    hot_sphere.color = [1, 0, 0, 1]
-
-    # source for tests
-    source = sim.add_source("GenericSource", "hot_sphere_source")
+    # Get F18 yield info
     total_yield = get_rad_yield("F18")
     print("Yield for F18 (nb of e+ per decay) : ", total_yield)
-    source.particle = "e+"
-    source.energy.type = "F18"
-    source.activity = 1e4 * Bq * total_yield
+
+    # Adjust activity for visualization mode
     if sim.visu:
-        source.activity = 1 * Bq * total_yield
-    source.half_life = 6586.26 * sec
+        print("Visualization mode: reducing all activities by factor 1000")
+        for source in sources:
+            source.activity = source.activity / 1000
 
     # physics
     sim.physics_manager.physics_list_name = "G4EmStandardPhysics_option3"
     sim.physics_manager.enable_decay = True
     sim.physics_manager.set_production_cut("world", "all", 1 * m)
-    sim.physics_manager.set_production_cut("waterbox", "all", 1 * mm)
+    
+    # Set production cuts for phantom volumes
+    sim.physics_manager.set_production_cut(phantom.name, "all", 1 * mm)
 
     # add the PET digitizer
-    add_vereos_digitizer_v1(sim, pet, f"output_vereos.root")
+    output_filename = f"output_{phantom_name}.root"
+    add_vereos_digitizer_v1(sim, pet, output_filename)
 
     # add stat actor
     stats = sim.add_actor("SimulationStatisticsActor", "Stats")
     stats.track_types_flag = True
-    stats.output_filename = "stats_vereos.txt"
+    stats.output_filename = f"stats_{phantom_name}.txt"
 
     # timing
-    sim.run_timing_intervals = [[0, 120.0 * sec]]
+    sim.run_timing_intervals = [[0, 10.0 * sec]]
+
+    # Print simulation summary
+    print(f"\n=== Simulation Summary ===")
+    print(f"Phantom: {phantom_name}")
+    print(f"Number of sources: {len(sources)}")
+    print(f"Simulation time: {sim.run_timing_intervals[0][1]/sec} seconds")
+    print(f"Output file: {output_filename}")
+    print(f"Stats file: stats_{phantom_name}.txt")
+    print("="*30)
+
+    # Print simulation summary
+    print(f"\n=== Simulation Summary ===")
+    print(f"Phantom: {phantom_name}")
+    print(f"Number of sources: {len(sources)}")
+    print(f"Simulation time: {sim.run_timing_intervals[0][1]/sec} seconds")
+    print(f"Output file: {output_filename}")
+    print(f"Stats file: stats_{phantom_name}.txt")
+    print("="*30)
 
     # go
     sim.run()
 
+    # Print completion info
+    print(f"\nSimulation completed!")
+    print(f"Check outputs in: {sim.output_dir}")
+    print(f"Stats: stats_{phantom_name}.txt")
+    print(f"Data: {output_filename}")
+
     # end
-    """print(f"Output statistics are in {stats.output}")
-    print(f"Output edep map is in {dose.output}")
-    print(f"vv {ct.image} --fusion {dose.output}")
-    stats = sim.output.get_actor("Stats")
-    print(stats)"""
+    print(f"\nSimulation completed!")
+    print(f"Check outputs in: {sim.output_dir}")
+    print(f"Stats: stats_{phantom_name}.txt")
+    print(f"Data: {output_filename}")
+    
+    # You can access statistics if needed
+    # stats = sim.output.get_actor("Stats")
+    # print(stats)
