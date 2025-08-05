@@ -1,0 +1,57 @@
+!INTERFILE := 
+!imaging modality := PET
+!version of keys := CASToRv3.2.1
+CASToR version := 3.2.1
+
+!GENERAL DATA := 
+!originating system := PET_PHILIPS_VEREOS_FINE
+!data offset in bytes := 0
+!name of data file := philips_vereos_sim_data_fine_sensitivity.img
+patient name := philips_vereos_sim_data_fine_sensitivity
+
+!GENERAL IMAGE DATA 
+!type of data := Dynamic
+!total number of images := 1
+imagedata byte order := LITTLEENDIAN
+!number of frame groups :=1 
+process status := 
+
+!STATIC STUDY (General) :=
+number of dimensions := 3
+!matrix size [1] := 300
+!matrix size [2] := 150
+!matrix size [3] := 1
+!number format := short float
+!number of bytes per pixel := 4
+scaling factor (mm/pixel) [1] := 1
+scaling factor (mm/pixel) [2] := 1
+scaling factor (mm/pixel) [3] := 2
+first pixel offset (mm) [1] := 0
+first pixel offset (mm) [2] := 0
+first pixel offset (mm) [3] := 0
+data rescale offset := 0
+data rescale slope := 1
+quantification units := 1
+!number of images in this frame group := 1
+!image duration (sec) := 10
+!image start time (sec) := 0
+pause between frame groups (sec) := 0
+!END OF INTERFILE := 
+
+!COPY OF INPUT HEADER 1
+Data filename: /home/y5ma/castor_v3.2/LXePET/philips_vereos_sim_fine.cdf
+Number of events: 11412
+Data mode: list-mode
+Data type: PET
+Start time (s): 0
+Duration (s): 10
+Scanner name: PET_PHILIPS_VEREOS_FINE
+Calibration factor: 1.0
+Isotope: F-18
+TOF information flag: 0
+Attenuation correction flag: 0
+Normalization correction flag: 0
+Scatter correction flag: 0
+Random correction flag: 0
+Maximum number of lines per event: 1
+!END OF COPY OF INPUT HEADER 1
