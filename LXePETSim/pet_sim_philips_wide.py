@@ -3,7 +3,7 @@
 
 import opengate as gate
 from pathlib import Path
-import opengate.contrib.pet.philipsvereos as pet_vereos
+import opengate.contrib.pet.philipsvereoswide as pet_vereos
 from pet_helpers import add_vereos_digitizer_v1
 from opengate.geometry.utility import get_circular_repetition
 from opengate.sources.base import get_rad_yield
