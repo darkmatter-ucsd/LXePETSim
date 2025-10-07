@@ -12,8 +12,9 @@ from opengate.sources.base import get_rad_yield
 from phantoms import (
     add_multiple_hot_spheres_phantom,
     add_simple_hot_sphere_phantom,
-    add_resolution_test_phantom,
-    add_cold_spheres_phantom
+    add_micro_derenzo_phantom,
+    #add_resolution_test_phantom,
+    #add_cold_spheres_phantom
 )
 
 if __name__ == "__main__":
@@ -64,20 +65,16 @@ if __name__ == "__main__":
     # Choose which phantom to use by uncommenting one of the following
     
     # Option 1: Multiple hot spheres (recommended for comprehensive testing)
-    phantom, sources = add_multiple_hot_spheres_phantom(sim, "multi_sphere")
-    phantom_name = "multiple_hot_spheres"
+    #phantom, sources = add_multiple_hot_spheres_phantom(sim, "multi_sphere")
+    #phantom_name = "multiple_hot_spheres"
     
     # Option 2: Simple single hot sphere (original)
     # phantom, sources = add_simple_hot_sphere_phantom(sim, "simple")
     # phantom_name = "simple_hot_sphere"
     
-    # Option 3: Resolution test with small sphere pairs
-    # phantom, sources = add_resolution_test_phantom(sim, "resolution")
-    # phantom_name = "resolution_test"
-    
-    # Option 4: Hot and cold spheres with background
-    # phantom, sources = add_cold_spheres_phantom(sim, "hot_cold")
-    # phantom_name = "hot_cold_spheres"
+    # option 3: 
+    phantom, sources = add_micro_derenzo_phantom(sim, "micro_derenzo")
+    phantom_name = "micro derenzo"
     
     print(f"\nUsing phantom: {phantom_name}")
     print(f"Total sources created: {len(sources)}")
@@ -110,7 +107,7 @@ if __name__ == "__main__":
     stats.output_filename = f"stats_{phantom_name}.txt"
 
     # timing
-    sim.run_timing_intervals = [[0, 10.0 * sec]]
+    sim.run_timing_intervals = [[0, 2.0 * sec]]
 
     # Print simulation summary
     print(f"\n=== Simulation Summary ===")
