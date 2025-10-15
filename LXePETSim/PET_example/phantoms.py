@@ -27,9 +27,10 @@ def add_multiple_hot_spheres_phantom(sim, name="multi_sphere_phantom"):
 
     # main water container
     waterbox = sim.add_volume("Box", f"{name}_waterbox")
-    waterbox.size = [25 * cm, 25 * cm, 25 * cm]
+    waterbox.size = [10 * cm, 10 * cm, 10 * cm]
     waterbox.translation = [0 * cm, 0 * cm, 0 * cm]
-    waterbox.material = "G4_WATER"
+    # use air for the water box
+    waterbox.material = "G4_AIR"
     waterbox.color = blue
 
     # hot sphere configurations
@@ -38,39 +39,39 @@ def add_multiple_hot_spheres_phantom(sim, name="multi_sphere_phantom"):
         {
             "name": f"{name}_center_large",
             "position": [0 * cm, 0 * cm, 0 * cm],
-            "radius": 2.0 * cm,
-            "activity": 8e4 * Bq,
+            "radius": 2.0 * mm,
+            "activity": 2e3 * Bq,
             "color": red
         },
         
         # Radial position test - same size, different distances from center
         {
             "name": f"{name}_radial_3cm",
-            "position": [4 * cm, 0 * cm, 0 * cm],
-            "radius": 1.0 * cm,
-            "activity": 4e4 * Bq,
+            "position": [1 * cm, 0 * cm, 0 * cm],
+            "radius": 1.0 * mm,
+            "activity": 1e3 * Bq,
             "color": green
         },
         {
             "name": f"{name}_radial_6cm",
-            "position": [7 * cm, 0 * cm, 0 * cm],
-            "radius": 1.0 * cm,
-            "activity": 4e4 * Bq,
+            "position": [2 * cm, 0 * cm, 0 * cm],
+            "radius": 1.0 * mm,
+            "activity": 1e3 * Bq,
             "color": yellow
         },
         {
             "name": f"{name}_radial_9cm",
-            "position": [10 * cm, 0 * cm, 0 * cm],
-            "radius": 1.0 * cm,
-            "activity": 4e4 * Bq,
+            "position": [3 * cm, 0 * cm, 0 * cm],
+            "radius": 1.0 * mm,
+            "activity": 1e3 * Bq,
             "color": magenta
         },
         
         {
             "name": f"{name}_size_medium",
-            "position": [0 * cm, 4 * cm, 0 * cm],
-            "radius": 1.0 * cm,
-            "activity": 4e4 * Bq,
+            "position": [0 * cm, 1 * cm, 0 * cm],
+            "radius": 1.0 * mm,
+            "activity": 1e3 * Bq,
             "color": orange
         },
     
@@ -113,7 +114,7 @@ def add_multiple_hot_spheres_phantom(sim, name="multi_sphere_phantom"):
     return waterbox, sources
 
 
-def add_simple_hot_sphere_phantom(sim, name="simple_sphere"):
+def add_simple_hot_point_phantom(sim, name="simple_point", source_dist=0.0):
     """
     Simple single hot sphere phantom (your original design)
     """
@@ -125,58 +126,55 @@ def add_simple_hot_sphere_phantom(sim, name="simple_sphere"):
 
     # waterbox
     waterbox = sim.add_volume("Box", f"{name}_waterbox")
-    waterbox.size = [20 * cm, 20 * cm, 20 * cm]
+    waterbox.size = [30 * cm, 30 * cm, 30 * cm]
     waterbox.translation = [0 * cm, 0 * cm, 0 * cm]
     waterbox.material = "G4_WATER"
-    waterbox.color = [0, 0, 1, 0.3]
-
-    # hot sphere
-    hot_sphere = sim.add_volume("Sphere", f"{name}_hot_sphere")
-    hot_sphere.mother = waterbox.name
-    hot_sphere.rmax = 10 * cm
-    hot_sphere.material = "G4_WATER"
-    hot_sphere.color = [1, 0, 0, 1]
+    waterbox.color = [0, 0, 1, 0.5]
 
     # source
     source = sim.add_source("GenericSource", f"{name}_source")
     total_yield = get_rad_yield("F18")
+    source.attached_to = waterbox.name
     source.particle = "e+"
     source.energy.type = "F18"
-    source.position.type = "sphere"
-    source.position.radius = 1 * cm 
-    source.position.translation = [0, 0, 0] 
-    source.position.confine = f"{name}_hot_sphere"  
-    source.position.radius = hot_sphere.rmax
+    source.position.type = "point"
+    source.position.translation = [source_dist * cm, 0, 0] 
     source.activity = 1e4 * Bq * total_yield
     source.half_life = 6586.26 * sec
 
-    print(f"Created simple hot sphere: R=10mm, A=10kBq")
-    
     return waterbox, [source]
 
 def add_micro_derenzo_phantom(
     sim,
     name="micro_derenzo",
-    rmin_mm=10.0,              # outward offset in mm (see absolute_rmin)
-    absolute_rmin=True,        # True: set first rod radius to rmin; False: shift by rmin
-    activity_per_rod_bq=5e2    # per-rod base activity (Bq), scaled by F18 yield
+    rmin_mm=10.0,              # outward offset in mm
+    absolute_rmin=True,        # True: place first rod exactly at rmin; False: shift whole sector outward
+    activity_ref_bq=2e1,       # reference activity for rods with diameter = 1.0 mm
+    rod_length_mm=1.0          # rod length in mm (fixed as requested)
 ):
     mm = gate.g4_units.mm
     cm = gate.g4_units.cm
     sec = gate.g4_units.s
     Bq = gate.g4_units.Bq
 
-    # Create waterbox container (thicker than 30 mm rods)
+    # Unit conversion
+    mm3_to_ml = 1.0 / 1000.0
+
+    # Create waterbox container (slightly larger than rods)
     waterbox = sim.add_volume("Box", f"{name}_waterbox")
-    waterbox.size = [25*cm, 25*cm, 40*mm]
+    waterbox.size = [10*cm, 10*cm, rod_length_mm*mm + 10*mm]
     waterbox.translation = [0, 0, 0]
-    waterbox.material = "G4_WATER"
+    waterbox.material = "G4_AIR"
     waterbox.color = [0.7, 0.7, 0.9, 0.3]
 
     # Diameters (mm) and number of radial layers (1,2,3,...)
-    rod_diams  = [1.6, 1.4, 1.2, 1.0, 0.8, 0.6]
-    rod_layers = [5,   5,   5,   6,   8,   10]
-    rod_len = 30 * mm  # total length; G4Tubs uses half-length below
+    #rod_diams  = [1.6, 1.4, 1.2, 1.0, 0.8, 0.6]
+    #rod_layers = [5,   5,   5,   6,   8,   10]
+    rod_diams = [4.8, 4.0, 2.8, 2.4, 1.6, 1.2]
+    rod_layers = [3, 4, 5, 6, 8, 10]
+    #rod_diams = [2,1,0.5]
+    #rod_layers = [2,3,4]
+    rod_len = rod_length_mm * mm
 
     total_yield = get_rad_yield("F18")
     sources = []
@@ -185,29 +183,25 @@ def add_micro_derenzo_phantom(
     rmin = rmin_mm * mm
 
     for i_sector, (d_mm, n_layers) in enumerate(zip(rod_diams, rod_layers)):
-        pitch  = 2.0 * d_mm * mm        # rod-to-rod center spacing
-        r_rod  = (d_mm * mm) / 2.0      # cylinder radius
-        theta  = - i_sector * np.pi / 3.0 # sector rotation (0°,60°,120°,...)
+        pitch  = 2.0 * d_mm * mm              # rod-to-rod spacing
+        r_rod  = (d_mm * mm) / 2.0            # rod radius
+        theta  = - i_sector * np.pi / 3.0     # sector rotation (0°, 60°, ...)
 
         # Rotation matrix for this sector
         R = np.array([[np.cos(theta), -np.sin(theta)],
                       [np.sin(theta),  np.cos(theta)]])
 
-        # --- Compute per-sector (dx, dy) once, from the first-layer single rod ---
-        # In local triangular grid: layer=1 has j=0 at (x_local=0, y_local=pitch)
+        # Compute first-layer rod position in local grid
         x1_local, y1_local = 0.0, 1.0 * pitch
         x1, y1 = R @ np.array([x1_local, y1_local])
         r1 = np.hypot(x1, y1)
-        # Unit vector along the first-layer rod direction
         if r1 == 0:
-            # Fallback (shouldn't happen): use sector middle direction
+            # fallback: use sector middle direction
             u = np.array([np.cos(theta + np.pi/6), np.sin(theta + np.pi/6)])
         else:
             u = np.array([x1, y1]) / r1
 
-        # Determine sector-wide translation
-        # absolute_rmin=True  => place first rod at exactly r = rmin
-        # absolute_rmin=False => shift whole sector outward by rmin
+        # Sector-wide translation
         if absolute_rmin:
             delta = (rmin - r1) * u
         else:
@@ -215,19 +209,18 @@ def add_micro_derenzo_phantom(
 
         dx, dy = float(delta[0]), float(delta[1])
 
-        # --- Place rods: layer n has exactly n rods (1,2,3,...) ---
+        # Place rods: layer n has exactly n rods
         for layer in range(1, n_layers + 1):
             for j in range(layer):
-                # Local triangular grid coordinates (centered per row)
+                # Local triangular grid coordinates (equilateral)
                 x_local = (j - (layer - 1) / 2.0) * pitch
-                y_local = layer * pitch
+                y_local = layer * (np.sqrt(3)/2) * pitch  # ✅ fixed spacing
 
-                # Rotate to global, then apply the SAME (dx, dy) for the whole sector
+                # Rotate to global coordinates and apply offset
                 x, y = R @ np.array([x_local, y_local])
                 x += dx
                 y += dy
 
-                # Create rod geometry (vertical along z)
                 rod_name = f"{name}_sec{i_sector}_d{d_mm:.1f}_L{layer}_j{j}"
                 rod = sim.add_volume("Tubs", rod_name)
                 rod.mother = waterbox.name
@@ -238,7 +231,11 @@ def add_micro_derenzo_phantom(
                 rod.material = "G4_WATER"
                 rod.color = [1, 0, 0, 1]
 
-                # Attach F18 source filling the rod cylinder
+                # --- Compute rod activity based on diameter² scaling ---
+                # Reference: 1.0 mm rods have activity_ref_bq
+                activity_bq = activity_ref_bq * (d_mm / 1.0)**2
+
+                # Attach F18 source
                 src = sim.add_source("GenericSource", f"{rod_name}_src")
                 src.attached_to = rod.name
                 src.particle = "e+"
@@ -247,7 +244,7 @@ def add_micro_derenzo_phantom(
                 src.position.radius = rod.rmax
                 src.position.dz = rod.dz
                 src.direction.type = "iso"
-                src.activity = activity_per_rod_bq * Bq * total_yield
+                src.activity = activity_bq * Bq * total_yield
                 src.half_life = 6586.26 * sec
 
                 sources.append(src)
