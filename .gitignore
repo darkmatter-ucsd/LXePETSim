@@ -5,6 +5,9 @@
 /tmp
 *.log
 *.pkl
+*.csv
+*.root
+*.txt
 cache/
 
 /plots
