@@ -126,19 +126,28 @@ def add_simple_hot_point_phantom(sim, name="simple_point", source_dist=0.0):
 
     # waterbox
     waterbox = sim.add_volume("Box", f"{name}_waterbox")
-    waterbox.size = [30 * cm, 30 * cm, 30 * cm]
+    waterbox.size = [40 * cm, 40 * cm, 40 * cm]
     waterbox.translation = [0 * cm, 0 * cm, 0 * cm]
-    waterbox.material = "G4_WATER"
+    waterbox.material = "G4_AIR"
     waterbox.color = [0, 0, 1, 0.5]
+    
+     # ---- small hot sphere ----
+    hot_sphere = sim.add_volume("Sphere", f"{name}_hot_sphere")
+    hot_sphere.rmin = 0 * mm
+    hot_sphere.rmax = 3 * mm   # radius = 3 mm (enough to stop positrons)
+    hot_sphere.translation = [source_dist * cm, 0, 0]
+    hot_sphere.material = "G4_WATER"  # keep same material for simplicity
+    hot_sphere.mother = waterbox.name
+    hot_sphere.color = [1, 0, 0, 0.6]  # red semi-transparent
 
-    # source
+    # ---- positron source ----
     source = sim.add_source("GenericSource", f"{name}_source")
     total_yield = get_rad_yield("F18")
-    source.attached_to = waterbox.name
+    source.attached_to = hot_sphere.name  # attach to the small water sphere
     source.particle = "e+"
     source.energy.type = "F18"
     source.position.type = "point"
-    source.position.translation = [source_dist * cm, 0, 0] 
+    source.position.translation = [0, 0, 0]  # centered inside the sphere
     source.activity = 1e4 * Bq * total_yield
     source.half_life = 6586.26 * sec
 
